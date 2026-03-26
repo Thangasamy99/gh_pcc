@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.idea/
+.vscode/
+
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# logs
+*.log
+gh_pcc.sql

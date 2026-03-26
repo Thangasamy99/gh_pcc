@@ -1,0 +1,93 @@
+================================================
+  SECURITY GUARD API FLOW
+  PCC GENERAL HOSPITAL - HMS
+================================================
+
+This document details the functional flow of all Security Guard APIs within the PCC General Hospital application to clarify how data moves between the frontend React application and the Spring Boot backend.
+
+------------------------------------------------
+1. Authentication & Initialization Flow
+------------------------------------------------
+Frontend Event: User logs in via LoginPage.tsx with Role SECURITY_GUARD.
+
+1. The login credentials hit /api/v1/auth/login.
+2. The backend verifies credentials and returns a JWT token along with user details (including Role and Branch Context).
+3. LoginPage.tsx checks userData.roles.includes('SECURITY_GUARD') and navigates the user to /security/dashboard.
+
+------------------------------------------------
+2. Security Dashboard Flow
+------------------------------------------------
+Frontend Event: SecurityDashboard.tsx mounts or the "Refresh" button is clicked.
+
+The dashboard triggers concurrent API calls using securityService.ts to populate its statistics:
+
+A. Dashboard General Stats
+- API Called: GET /api/v1/security/dashboard/{branchId}
+- Backend Service: SecurityServiceImpl.getDashboardStats(Long branchId)
+- Action: Counts today's patients, today's visitors, and currently active visitors using repository queries (countTodayEntries, countActiveVisitors). Calculates total beds from the WardRepository.
+- Returns: SecurityDashboardDTO (todayVisitors, todayEntries, activeVisitors, totalBeds, occupiedBeds, availableBeds).
+
+B. Today's Entry Stream 
+- API Called: GET /api/v1/security/entries/today/{branchId}
+- Backend Service: SecurityServiceImpl.getTodayEntries(Long branchId, Pageable pageable)
+- Action: Queries PatientEntryRepository.findTodayEntries to get all PatientEntryRecords created today.
+- Returns: Paginated PatientEntryResponseDTO (mapped from entities).
+
+C. Active Visitors List
+- API Called: GET /api/v1/security/visitors/active/{branchId}
+- Backend Service: SecurityServiceImpl.getActiveVisitors(Long branchId)
+- Action: Queries VisitorLogRepository.findActiveVisitorsByBranch where status = 'ACTIVE'.
+- Returns: List of VisitorResponseDTO.
+
+D. Available Beds Check
+- API Called: GET /api/v1/security/beds/available/{branchId}
+- Backend Service: SecurityServiceImpl.getAvailableBeds(Long branchId)
+- Action: Explicit query to fetch ward capacity to fill the dashboard Bed tracker card.
+- Returns: Raw Object mapping {"totalBeds": 50, "occupiedBeds": x, "availableBeds": y}.
+
+------------------------------------------------
+3. Registering a Patient/Visitor Flow
+------------------------------------------------
+Frontend Event: Security guard clicks "New Registration" and uses RegisterPatient.tsx or SecurityEntryStepper.tsx.
+
+A. Fetching Dropdown Meta-data (OnInit)
+Before showing the form, the frontend fetches static categorical data (currently localized in securityService.ts as static responses, normally fetched via meta-data APIs):
+- getVisitTypes(): e.g. Outpatient, Inpatient Visit, Emergency.
+- getDirections(): e.g. Reception, Ward Block, Laboratory.
+- getGenders()
+
+B. Submitting the Entry
+- API Called: POST /api/v1/security/entries
+- Payload: PatientEntryRequestDTO (patientName, age, gender, visitType, etc.)
+- Headers: Includes X-User-Id for auditing who made the entry.
+- Backend Service: SecurityServiceImpl.createPatientEntry
+- Action: 
+  1. Validates User and Branch.
+  2. Generates an intelligent auto-increment ID (sequenceGenerator.generateEntryId).
+  3. Saves the PatientEntryRecord.
+- Returns: PatientEntryResponseDTO which is used by the frontend to show a Success Toast (e.g. Entry ID: SEC-1234).
+
+------------------------------------------------
+4. Visitor Management & Check-out Flow
+------------------------------------------------
+Checking out an Active Visitor
+Frontend Event: In SecurityDashboard.tsx or ActiveVisitors.tsx, the guard clicks "Exit" on a visitor card.
+- API Called: POST /api/v1/security/visitors/{id}/checkout
+- Headers: Includes X-User-Id.
+- Backend Service: SecurityServiceImpl.checkoutVisitor
+- Action: Retrieves the visitor log. Sets exitTime = LocalDateTime.now() and updates status = COMPLETED. Saves changes to DB.
+- Returns: Updated VisitorResponseDTO.
+
+Searching Visitors
+Frontend Event: Guard searches for a historical visitor.
+- API Called: GET /api/v1/security/visitors/search?search={query}&page=0&size=10
+- Backend Service: SecurityServiceImpl.searchVisitors
+- Action: Executes a %LIKE% query on Name or ID.
+- Returns: Paginated VisitorResponseDTO.
+
+------------------------------------------------
+5. Security Guard Route Protection & Authorization
+------------------------------------------------
+The system enforces Security Guard access using two structural checks:
+1. Frontend Auth Check: The App.tsx router wraps /security/* routes in <PrivateRoute requiredRole="SECURITY">. Unauthenticated users or non-security roles are bounced to / or their respective dashboards.
+2. Backend Controller Annotations: Every method in SecurityController.java utilizes Spring Security's @PreAuthorize("hasAnyRole('SECURITY_GUARD', 'ADMIN', 'SUPER_ADMIN')"). If someone intercepts the token layer on the frontend, the backend will reject API calls from users without this explicit role authority in their JWT token.

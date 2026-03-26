@@ -1,0 +1,175 @@
+================================================
+  PCC GENERAL HOSPITAL - DAILY PROGRESS NOTES
+  Date   : 06 March 2026 (Thursday)
+  Project: Hospital Management System (HMS)
+================================================
+
+----- BACKEND STRUCTURE ----------------------------------------
+
+1. Created full Spring Boot project folder structure under:
+      backend/src/main/java/com/hospital/
+
+   Modules created (folders + Java files with package only):
+   - config/          (SecurityConfig, DatabaseConfig, SwaggerConfig,
+                        WebConfig, CacheConfig, AsyncConfig,
+                        BranchDatabaseConfig, MultipartConfig)
+   - security/        (JwtAuthenticationFilter, JwtTokenProvider,
+                        UserDetailsServiceImpl, SecurityConstants,
+                        BranchSecurityInterceptor)
+   - multibranch/     (model, repository, service/api, service/impl,
+                        filter, interceptor, annotation, resolver, dto)
+   - superadmin/      (controller, service/api, service/impl,
+                        repository, model, dto, scheduler)
+   - centralpharmacy/ (controller, service/api, service/impl,
+                        repository, model, dto, scheduler)
+   - branchadmin/     (controller, service/api, service/impl,
+                        repository, model, dto)
+   - auth/            (controller, service/api, service/impl,
+                        repository, model, dto, util)
+   - patient/         (controller, service/api, service/impl,
+                        repository, model, dto, validation, util, event)
+   - consultation/    (controller, service/api, service/impl,
+                        repository, model, dto, clinical, util, event)
+   - laboratory/      (controller, service/api, service/impl,
+                        repository, model, dto, analyzer, util, event)
+   - pharmacy/        (controller, service/api, service/impl,
+                        repository, model, dto, util, event)
+   - ward/            (controller, service/api, service/impl,
+                        repository, model, dto, util, websocket, event)
+   - billing/         (controller, service/api, service/impl,
+                        repository, model, dto, util, integration, event)
+   - inventory/       (controller, service/api, service/impl,
+                        repository, model, dto, util, event)
+   - hr/              (controller, service/api, service/impl,
+                        repository, model, dto, util, scheduler)
+   - reporting/       (controller, service/api, service/impl,
+                        repository, model, dto, generator, util, scheduler)
+   - common/          (entity, exception, util, constant)
+   - util/            (PdfGeneratorUtil, ExcelGeneratorUtil, etc.)
+
+   NOTE: All Java files contain ONLY the package declaration.
+         Class body will be filled in future sessions.
+
+----- FRONTEND STRUCTURE ----------------------------------------
+
+2. Created React/TypeScript frontend folder structure under:
+      frontend/
+
+   Folders created (NO files - folders only):
+   - public/assets/images/branches/ (branch1-buea, branch2-douala,
+                                       branch3-yaounde, ...)
+   - public/assets/images/logos/
+   - public/assets/icons/
+   - src/assets/styles/
+   - src/assets/themes/branchThemes/
+   - src/components/common/Charts/  Cards/
+   - src/components/auth/
+   - src/components/layout/
+   - src/components/home/
+   - src/components/superadmin/     (Dashboard, BranchCreator,
+                                      BranchList, GlobalUserManager,
+                                      SystemMonitor, GlobalReports,
+                                      LicenseManager)
+   - src/components/centralpharmacy/(Dashboard, MasterInventory,
+                                      BranchAllocation, BulkProcurement,
+                                      SupplierManagement, BranchStockMonitor,
+                                      CentralReports)
+   - src/components/branchadmin/    (Dashboard, BranchUserManager,
+                                      BranchDepartmentManager,
+                                      BranchSettings, BranchReports)
+   - src/components/branch-selector/
+   - src/components/security/
+   - src/components/reception/
+   - src/components/consultation/
+   - src/components/laboratory/
+   - src/components/pharmacy/
+   - src/components/ward/
+   - src/components/billing/
+   - src/components/inventory/
+   - src/components/hr/
+   - src/components/reports/
+   - src/pages/
+   - src/services/api/  websocket/  storage/
+   - src/store/slices/
+   - src/hooks/
+   - src/types/
+   - src/utils/
+   - src/config/
+   - src/locales/en/  fr/
+
+----- DATABASE SEED (MySQL) -------------------------------------
+
+3. Created 11 SQL seed files under:
+      backend/src/main/resources/db/
+
+   Files:
+   - 01-create-database.sql     → Creates database gh_hms (UTF8MB4)
+   - 02-create-tables.sql       → 7 core tables:
+                                    branches, roles, permissions,
+                                    role_permissions, users,
+                                    user_branch_assignments,
+                                    user_activity_log, user_sessions,
+                                    password_reset_tokens
+   - 03-seed-roles-permissions  → 15 roles + 89 permissions
+                                    + role-permission mappings
+   - 04-seed-branches.sql       → 1 Central Pharmacy + 16 Hospitals
+                                    across 7 Cameroon regions
+   - 05-seed-super-admin.sql    → Super Admin user
+   - 06-seed-central-pharmacy   → Central Pharmacy Admin user
+   - 07-seed-branch-admins.sql  → 16 Branch Admins (stored procedure)
+   - 08-seed-sample-staff.sql   → Sample Buea branch staff
+   - 09-create-indexes.sql      → Performance composite indexes
+   - 10-create-views.sql        → 5 reporting views
+   - 11-run-all.sql             → Master runner script
+
+4. Created Spring Boot models with full JPA fields:
+   - auth/model/User.java              (maps → users table)
+   - auth/model/Role.java              (maps → roles table)
+   - auth/model/Permission.java        (maps → permissions table)
+   - auth/model/UserBranchAssignment   (maps → user_branch_assignments)
+   - multibranch/model/Branch.java     (maps → branches table)
+   - superadmin/model/SystemAuditLog   (maps → user_activity_log)
+   - superadmin/model/SuperAdmin.java
+   - superadmin/model/GlobalSettings
+   - superadmin/model/LicenseInfo
+
+5. Created application.properties:
+   - DB : gh_hms (MySQL on localhost:3306)
+   - Password : SrPdpabSUY5v
+   - JWT, HikariCP pool, Swagger, Async, Cache configured
+
+----- DATABASE STATUS -------------------------------------------
+
+6. Successfully seeded database gh_hms via XAMPP MySQL:
+   ┌─────────────┬───────┐
+   │ Branches    │  17   │
+   │ Roles       │  15   │
+   │ Permissions │  89   │
+   │ Users       │  13   │
+   └─────────────┴───────┘
+
+----- DEFAULT LOGIN CREDENTIALS ---------------------------------
+
+   Role                    │ Username           │ Password
+   ────────────────────────┼────────────────────┼─────────────
+   Super Admin             │ super.admin        │ Admin@123
+   Central Pharmacy Admin  │ central.pharmacy   │ Pharma@123
+   Branch Admin (Buea)     │ admin.buea         │ Branch@123
+   Branch Admin (Douala)   │ admin.douala       │ Branch@123
+   Doctor (Sample)         │ dr.mbella          │ Staff@123
+   Nurse (Sample)          │ nurse.akono        │ Staff@123
+
+   NOTE: Branch Admins must change password on first login.
+
+----- NEXT STEPS ------------------------------------------------
+
+   [ ] Fill Java class bodies (models, services, controllers)
+   [ ] Create pom.xml / build.gradle with dependencies
+   [ ] Create React .tsx component files in frontend folders
+   [ ] Implement JWT login flow end-to-end
+   [ ] Build Super Admin dashboard
+   [ ] Build Branch Admin dashboard
+
+================================================
+  END OF DAY NOTES - 06 March 2026
+================================================
